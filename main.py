@@ -1,10 +1,14 @@
 
-receitas = [
+from fastapi import FastAPI
+
+app=FastAPI()
+
+'''receitas = [
     {
-        "nome": "brownie",
-        "ingredientes": ["3 ovos", "6 colheres de açúcar", "200g de chocolate", "100g de manteiga"],
-        "utensílios": ["tigela", "forma", "forno"],
-        "modo_preparo": "Misture tudo, leve ao forno a 180°C por 30 minutos."
+        'nome':''brownie',
+        'ingredientes': ['3 ovos',' '6 colheres de açúcar', '200g de chocolate', '100g de manteiga'],
+        'utensílios': ['tigela', 'forma', 'forno'],
+        'modo_preparo': 'Misture tudo, leve ao forno a 180°C por 30 minutos.'
     },
     {
         "nome": "torta",
@@ -36,7 +40,7 @@ receitas = [
         "utensílios": ["tigela", "forma", "forno"],
         "modo_preparo": "Prepare a massa, adicione o recheio e leve ao forno a 220°C por 20 minutos."
     }
-]
+]'''
 
 @app.get("/")
 def hello():
@@ -54,3 +58,15 @@ def get_receita(nome: str):
         if receita["nome"].lower() == nome.lower():
             return receita
     return {"erro": "Receita não encontrada"}
+
+from pydantic import BaseModel
+from typing import list 
+class Receita (BaseModel):
+    nome:str
+    ingredientes:list:[str]
+modo_de_preparo:str
+
+receitas= list[Receita]=[]
+
+@app.get("/receitas")
+def.get_todas_receitas():
