@@ -53,14 +53,23 @@ def hello():
     return {"title": "Livro de Receitas"}
 
 
-@app.get("/receitas")
+@app.get("/receita")
 def listar_receitas():
     return receitas
 
 
-@app.get("/receitas/{nome}")
-def get_receita(nome: str):
-    for receita in receitas:
-        if receita["nome"].lower() == nome.lower():
+@app.get("/receita/{nome}")
+def get_receita_por_nome(nome_receita: str):
+    for r in receitas:
+        if receita.nome == nome_receita:
             return receita
+        
     return {"erro": "Receita não encontrada"}
+
+@app.post("/receitas")
+def create_receita(dados: Receita):
+    nova_receita = dados,dict()
+
+    receita.append(nova_receita)
+
+    return nova_receita
