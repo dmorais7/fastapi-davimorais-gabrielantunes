@@ -4,7 +4,7 @@ from typing import List
 
 app = FastAPI()
 
-class Receita(BaseModel):
+class receita(BaseModel):
     id: int
     nome: str
     ingredientes: List[str]
@@ -12,38 +12,38 @@ class Receita(BaseModel):
     modo_preparo: str
 
 
-receitas: List[Receita] = [
-    Receita(
+receitas: List[receita] = [
+    receita(
         nome="brownie",
         ingredientes=["3 ovos", "6 colheres de açúcar", "200g de chocolate", "100g de manteiga"],
         utensilios=["tigela", "forma", "forno"],
         modo_preparo="Misture tudo, leve ao forno a 180°C por 30 minutos."
     ),
-    Receita(
+    receita(
         nome="torta",
         ingredientes=["3 ovos", "2 xícaras de farinha", "1 xícara de leite", "1/2 xícara de óleo"],
         utensilios=["tigela", "forma", "forno"],
         modo_preparo="Misture os ingredientes, despeje na forma e asse a 200°C por 40 minutos."
     ),
-    Receita(
+    receita(
         nome="bolo de cenoura",
         ingredientes=["3 cenouras", "3 ovos", "2 xícaras de farinha", "1 xícara de açúcar"],
         utensilios=["liquidificador", "forma", "forno"],
         modo_preparo="Bata as cenouras com ovos, adicione os secos e asse por 40 minutos."
     ),
-    Receita(
+    receita(
         nome="pudim",
         ingredientes=["1 lata de leite condensado", "2 latas de leite", "3 ovos"],
         utensilios=["liquidificador", "forma de pudim", "forno"],
         modo_preparo="Bata tudo, caramelize a forma e asse em banho-maria por 1 hora."
     ),
-    Receita(
+    receita(
         nome="panqueca",
         ingredientes=["2 ovos", "1 xícara de leite", "1 xícara de farinha", "sal a gosto"],
         utensilios=["tigela", "frigideira"],
         modo_preparo="Bata os ingredientes e frite pequenas porções na frigideira."
     ),
-    Receita(
+    receita(
         nome="pizza caseira",
         ingredientes=["2 xícaras de farinha", "1 ovo", "1/2 xícara de leite", "queijo", "molho de tomate"],
         utensilios=["tigela", "forma", "forno"],
@@ -60,9 +60,9 @@ def hello():
 @app.get("/receita")
 def listar_receitas():
     return receitas
-@app.get("/Receita")
-def listar_Receita():
-    return Receita
+@app.get("/receita")
+def listar_receita():
+    return receita
 
 
 
@@ -70,7 +70,8 @@ def listar_Receita():
 def get_receita_por_nome(nome_receita: str):
     for r in receitas:
         if receita.nome == nome_receita:
-@app.get("/Receitas/{nome_receita}")
+            
+@app.get("/receitas/{nome_receita}")
 def get_receita_por_nome(nome_receita: str):
     for receita in receitas:
         if receita.nome.lower() == nome_receita.lower():
@@ -79,16 +80,16 @@ def get_receita_por_nome(nome_receita: str):
     return {"erro": "Receita não encontrada"}
 
 
-@app.post("/Receitas")
-def create_Receita(dados: Receita):
+@app.post("/receitas")
+def create_receita(dados: receita):
     receitas.append(dados)
     return dados
 
-@app.put("/Receita/{id}")
-def update_Receita(id:int, dados:Receita):
+@app.put("/receita/{id}")
+def update_Receita(id:int, dados:receita):
     for i in range(len(receitas)):
         if receitas[i]. id==id:  
-            receita_atualizada = Receita(
+            receita_atualizada = receita(
                 id=id,
                 nome=dados.nome,
                 ingredientes=dados.ingredientes,
