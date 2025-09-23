@@ -57,17 +57,25 @@ def hello():
     return {"title": "Livro de Receitas"}
 
 
+@app.get("/receita")
+def listar_receitas():
+    return receitas
 @app.get("/Receita")
 def listar_Receita():
     return Receita
 
 
 
+@app.get("/receita/{nome}")
+def get_receita_por_nome(nome_receita: str):
+    for r in receitas:
+        if receita.nome == nome_receita:
 @app.get("/Receitas/{nome_receita}")
 def get_receita_por_nome(nome_receita: str):
     for receita in receitas:
         if receita.nome.lower() == nome_receita.lower():
             return receita
+        
     return {"erro": "Receita não encontrada"}
 
 
