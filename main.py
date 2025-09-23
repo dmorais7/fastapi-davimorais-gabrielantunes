@@ -4,8 +4,8 @@ from typing import List
 
 app = FastAPI()
 
-
 class Receita(BaseModel):
+    id: int
     nome: str
     ingredientes: List[str]
     utensilios: List[str]
@@ -57,12 +57,13 @@ def hello():
     return {"title": "Livro de Receitas"}
 
 
-@app.get("/receitas")
-def listar_receitas():
-    return receitas
+@app.get("/Receita")
+def listar_Receita():
+    return Receita
 
 
-@app.get("/receitas/{nome_receita}")
+
+@app.get("/Receitas/{nome_receita}")
 def get_receita_por_nome(nome_receita: str):
     for receita in receitas:
         if receita.nome.lower() == nome_receita.lower():
@@ -70,7 +71,22 @@ def get_receita_por_nome(nome_receita: str):
     return {"erro": "Receita não encontrada"}
 
 
-@app.post("/receitas")
-def create_receita(dados: Receita):
+@app.post("/Receitas")
+def create_Receita(dados: Receita):
     receitas.append(dados)
     return dados
+
+@app.put("/Receita/{id}")
+def update_Receita(id:int, dados:Receita):
+    for i in range(len(receitas)):
+        if receitas[i]. id==id:  
+            receita_atualizada = Receita(
+                id=id,
+                nome=dados.nome,
+                ingredientes=dados.ingredientes,
+                 modo_preparo=dados.modo_preparo,
+            )      
+            receitas[i] = (receita_atualizada) 
+            return receita_atualizada
+  
+        return {"mensagem": "receita não encontrada"} 
