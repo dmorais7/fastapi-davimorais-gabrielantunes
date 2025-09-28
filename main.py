@@ -9,12 +9,12 @@ class receita(BaseModel):
     id: int
     nome: str
     ingredientes: List[str]
-    modo_preparo: str
+    modo_de_preparo: str
 
 class Creatreceita(BaseModel):
     nome: str
     ingredientes: List[str]
-    modo_preparo: str
+    modo_de_preparo: str
 receitas: List[receita] = []
 proximo_id = 1
 
