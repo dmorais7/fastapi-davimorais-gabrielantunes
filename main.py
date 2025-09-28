@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi import HTTPException
 from pydantic import BaseModel
 from typing import List
 
@@ -8,48 +9,14 @@ class receita(BaseModel):
     id: int
     nome: str
     ingredientes: List[str]
-    utensilios: List[str]
     modo_preparo: str
 
-
-receitas: List[receita] = [
-    receita(
-        nome="brownie",
-        ingredientes=["3 ovos", "6 colheres de açúcar", "200g de chocolate", "100g de manteiga"],
-        utensilios=["tigela", "forma", "forno"],
-        modo_preparo="Misture tudo, leve ao forno a 180°C por 30 minutos."
-    ),
-    receita(
-        nome="torta",
-        ingredientes=["3 ovos", "2 xícaras de farinha", "1 xícara de leite", "1/2 xícara de óleo"],
-        utensilios=["tigela", "forma", "forno"],
-        modo_preparo="Misture os ingredientes, despeje na forma e asse a 200°C por 40 minutos."
-    ),
-    receita(
-        nome="bolo de cenoura",
-        ingredientes=["3 cenouras", "3 ovos", "2 xícaras de farinha", "1 xícara de açúcar"],
-        utensilios=["liquidificador", "forma", "forno"],
-        modo_preparo="Bata as cenouras com ovos, adicione os secos e asse por 40 minutos."
-    ),
-    receita(
-        nome="pudim",
-        ingredientes=["1 lata de leite condensado", "2 latas de leite", "3 ovos"],
-        utensilios=["liquidificador", "forma de pudim", "forno"],
-        modo_preparo="Bata tudo, caramelize a forma e asse em banho-maria por 1 hora."
-    ),
-    receita(
-        nome="panqueca",
-        ingredientes=["2 ovos", "1 xícara de leite", "1 xícara de farinha", "sal a gosto"],
-        utensilios=["tigela", "frigideira"],
-        modo_preparo="Bata os ingredientes e frite pequenas porções na frigideira."
-    ),
-    receita(
-        nome="pizza caseira",
-        ingredientes=["2 xícaras de farinha", "1 ovo", "1/2 xícara de leite", "queijo", "molho de tomate"],
-        utensilios=["tigela", "forma", "forno"],
-        modo_preparo="Prepare a massa, adicione o recheio e leve ao forno a 220°C por 20 minutos."
-    )
-]
+class Creatreceita(BaseModel):
+    nome: str
+    ingredientes: List[str]
+    modo_preparo: str
+receitas: List[receita] = []
+proximo_id = 1
 
 
 @app.get("/")
@@ -60,42 +27,49 @@ def hello():
 @app.get("/receita")
 def listar_receitas():
     return receitas
-@app.get("/receita")
-def listar_receita():
-    return receita
 
-
-
-@app.get("/receita/{nome}")
-def get_receita_por_nome(nome_receita: str):
-    for r in receitas:
-        if receita.nome == nome_receita:
-            
-@app.get("/receitas/{nome_receita}")
-def get_receita_por_nome(nome_receita: str):
-    for receita in receitas:
-        if receita.nome.lower() == nome_receita.lower():
-            return receita
-        
-    return {"erro": "Receita não encontrada"}
-
+@app.get("/receitas/id/{id}")
+def buscar_receita(id: int):
+    for r in receitas: 
+        if r.id == id:
+            return r
+    raise HTTPException(status_code=404, detail="Receita não encontrada")
 
 @app.post("/receitas")
-def create_receita(dados: receita):
-    receitas.append(dados)
-    return dados
+def criar_receita(dados: Creatreceita):
+    global proximo_id
 
-@app.put("/receita/{id}")
-def update_Receita(id:int, dados:receita):
+    for r in receitas:
+        if r.nome.lower() == dados.nome.lower():
+            raise HTTPException(status_code=400, detail="Receita já existente.")
+    nova_receita =receita(id = proximo_id , nome = dados.nome, ingredientes = dados.ingredientes, modo_de_preparo = dados.modo_de_preparo)
+    receitas.append(nova_receita)
+    proximo_id += 1
+    return nova_receita
+
+@app.put("/receitas/{id}", response_model=receita)
+def update_receita(id: int, dados: Creatreceita):
     for i in range(len(receitas)):
-        if receitas[i]. id==id:  
+        if receitas[i].id == id:
             receita_atualizada = receita(
-                id=id,
-                nome=dados.nome,
-                ingredientes=dados.ingredientes,
-                 modo_preparo=dados.modo_preparo,
-            )      
-            receitas[i] = (receita_atualizada) 
+                id= id,
+                nome= dados.nome,
+                ingredientes = dados.ingredientes,
+                modo_de_preparo = dados.modo_de_preparo,
+            )
+            receitas[i] = receita_atualizada
             return receita_atualizada
-  
-        return {"mensagem": "receita não encontrada"} 
+    raise HTTPException(status_code=404, detail="Erro!Receita não encontrada")
+
+@app.delete("/receitas/{id}")
+def deletar_receita(id: int):
+    if not receitas:
+       return {"mensagem": "Não há receitas para excluir."}
+     
+    for i in range(len(receitas)):
+        if receitas[i].id == id:
+            receitas.pop(i)
+            return {"mensagem": "Receita deletada"}
+    return {"mensagem": "Erro!Receita não encontrada"}
+
+
