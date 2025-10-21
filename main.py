@@ -1,7 +1,9 @@
+from http import HTTPStatus
 from fastapi import FastAPI
 from fastapi import HTTPException
 from pydantic import BaseModel
 from typing import List
+from schema import Creatreceita, receita
 
 app = FastAPI()
 
