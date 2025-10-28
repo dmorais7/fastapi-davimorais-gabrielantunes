@@ -38,7 +38,7 @@ def buscar_receita(id: int):
             return r
     raise HTTPException(status_code=404, detail="Receita não encontrada")
 
-@app.get("/receitas/nome/{nome}", response_model=Receita, status_code=HTTPStatus.OK)
+@app.get("/receitas/nome/{nome}", response_model=receita, status_code=HTTPStatus.OK)
 def buscar_receita_por_nome(nome: str):
     for r in receitas:
         if r.nome.lower() == nome.lower():
