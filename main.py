@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from pydantic import BaseModel
 from typing import List
-from schema import Creatreceita, receita
+from schema import Creatreceita
+from schema import receita
 
 app = FastAPI()
 
@@ -37,6 +38,13 @@ def buscar_receita(id: int):
             return r
     raise HTTPException(status_code=404, detail="Receita não encontrada")
 
+@app.get("/receitas/nome/{nome}", response_model=Receita, status_code=HTTPStatus.OK)
+def buscar_receita_por_nome(nome: str):
+    for r in receitas:
+        if r.nome.lower() == nome.lower():
+            return r
+    raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Receita não encontrada")
+
 @app.post("/receitas")
 def criar_receita(dados: Creatreceita):
     global proximo_id
@@ -51,6 +59,10 @@ def criar_receita(dados: Creatreceita):
 
 @app.put("/receitas/{id}", response_model=receita)
 def update_receita(id: int, dados: Creatreceita):
+    for r in receitas:
+        if r.id != id and r.nome.lower() == dados.nome.lower():
+            raise HTTPException(status_code=HTTPStatus.CONFLICT, detail="Já existe receita com esse nome")
+    
     for i in range(len(receitas)):
         if receitas[i].id == id:
             receita_atualizada = receita(
@@ -73,5 +85,5 @@ def deletar_receita(id: int):
             receitas.pop(i)
             return {"mensagem": "Receita deletada"}
     return {"mensagem": "Erro!Receita não encontrada"}
-
+    raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Erro!Receita não encontrada")
 
