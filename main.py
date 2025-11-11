@@ -1,24 +1,26 @@
 from http import HTTPStatus
 from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
-from typing import List
-from schema import Creatreceita,receita
+from typing import List, Dict
+from schema import Creatreceita,receita, usuario, UsuarioCreate, UsuarioPublic, UsuarioUpdate
+
 
 app = FastAPI()
 
-class receita(BaseModel):
-    id: int
-    nome: str
-    ingredientes: List[str]
-    modo_de_preparo: str
+id: int
+nome: str
+ingredientes: List[str]
+modo_de_preparo: str
 
-class Creatreceita(BaseModel):
-    nome: str
-    ingredientes: List[str]
-    modo_de_preparo: str
+nome: str
+ingredientes: List[str]
+modo_de_preparo: str
 receitas: List[receita] = []
-proximo_id = 1
+proximo_id_receita = 1
 
+usuarios_db: Dict[int, usuario] = {}
+proximo_id_usuario = 1
+proximo_id_receita = 1
 
 @app.get("/")
 def hello():
@@ -85,3 +87,87 @@ def deletar_receita(id: int):
     return {"mensagem": "Erro!Receita não encontrada"}
     raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Erro!Receita não encontrada")
 
+@app.post("/usuarios", response_model=UsuarioPublic, status_code=HTTPStatus.CREATED)
+def criar_usuario(usuario_data: UsuarioCreate):
+    global proximo_id_usuario
+
+    for user in usuarios_db.values():
+        if user.email == usuario_data.email:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail="Já existe um usuario com esse email."
+            )
+        
+    novo_usuario = usuario (
+            id=proximo_id_usuario,
+            username=usuario_data.username,
+            email=usuario_data.email,
+            password=usuario_data.password
+    )
+
+    usuarios_db[proximo_id_usuario] = novo_usuario
+    proximo_id_usuario += 1
+
+    return novo_usuario
+
+
+@app.get("/usuarios", response_model=List[UsuarioPublic])
+def listar_usuarios():
+    return list(usuarios_db.values())
+
+# Rota GET (Usuário por ID)
+@app.get("/usuarios/id/{user_id}", response_model=UsuarioPublic)
+def buscar_usuario_por_id(user_id: int):
+    if user_id not in usuarios_db:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Usuário não encontrado."
+        )
+    return usuarios_db[user_id]
+
+@app.get("/usuarios/nome/{username}", response_model=UsuarioPublic)
+def buscar_usuario_por_nome(username: str):
+    for user in usuarios_db.values():
+        if user.username.lower() == username.lower():
+            return user
+    raise HTTPException(
+        status_code=HTTPStatus.NOT_FOUND,
+        detail="Usuário não encontrado."
+    )
+
+@app.put("/usuarios/{user_id}", response_model=UsuarioPublic)
+def editar_usuario(user_id: int, usuario_data: UsuarioUpdate):
+    if user_id not in usuarios_db:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Usuário não encontrado."
+        )
+    
+    usuario_existente = usuarios_db[user_id]
+    
+    update_data = usuario_data.model_dump(exclude_unset=True)
+
+    if 'email' in update_data and update_data['email'] != usuario_existente.email:
+        for user in usuarios_db.values():
+            if user.email == update_data['email'] and user.id != user_id:
+                raise HTTPException(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    detail="Já existe outro usuário com este email."
+                )
+
+    updated_user = usuario_existente.model_copy(update=update_data)
+    
+    usuarios_db[user_id] = updated_user
+    
+    return updated_user
+
+@app.delete("/usuarios/{user_id}", status_code=HTTPStatus.NO_CONTENT)
+def deletar_usuario(user_id: int):
+    if user_id not in usuarios_db:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Usuário não encontrado."
+        )
+    
+    del usuarios_db[user_id]
+    return
