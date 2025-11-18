@@ -12,4 +12,7 @@ class user(table_registry.Base):
     username: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
+
     created_at: Mapped[Annotated[datetime, mapped_column(server_default=func.now())]]=mapped_column(init=False)
+
+    updated_at: Mapped[Annotated[datetime, mapped_column(server_default=func.now(), onupdate=func.now())]] = mapped_column(init=False)

@@ -1,9 +1,15 @@
 from http import HTTPStatus
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Dict
 from schema import Creatreceita,receita, usuario, UsuarioCreate, UsuarioPublic, UsuarioUpdate
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from models import User 
+from database import get_session
 
+receitas: List[receita] = []
+proximo_id_receita = 1
 
 app = FastAPI()
 
@@ -88,56 +94,75 @@ def deletar_receita(id: int):
     raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Erro!Receita não encontrada")
 
 @app.post("/usuarios", response_model=UsuarioPublic, status_code=HTTPStatus.CREATED)
-def criar_usuario(usuario_data: UsuarioCreate):
-    global proximo_id_usuario
+def criar_usuario(
+    usuario_data: UsuarioCreate,
+    session: Session = Depends(get_session)
+    ):
 
-    for user in usuarios_db.values():
-        if user.email == usuario_data.email:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail="Já existe um usuario com esse email."
-            )
+    user_by_email = session.scalar(
+        select(User).where(User.email == usuario_data.email)
+    )
+    user_by_username = session.scalar(
+        select(User).where(User.username == usuario_data.username)
+    )
+
+ 
+    if user_by_email == usuario_data.email:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Já existe um usuario com esse email."
+        )
         
-    novo_usuario = usuario (
+    novo_usuario = User(
             id=proximo_id_usuario,
             username=usuario_data.username,
             email=usuario_data.email,
             password=usuario_data.password
     )
 
-    usuarios_db[proximo_id_usuario] = novo_usuario
-    proximo_id_usuario += 1
+    session.add(novo_usuario)
+    session.commit()
+    session.refresh(novo_usuario)
 
     return novo_usuario
 
 
 @app.get("/usuarios", response_model=List[UsuarioPublic])
-def listar_usuarios():
-    return list(usuarios_db.values())
+   
+def listar_usuarios(session: Session: Depends(get_session), skip: int = 0, limit: int = 100):
 
-# Rota GET (Usuário por ID)
+usuarios = session.scalars(select(User).offset(skip).limit(limit)).all()
+return usuarios
+
 @app.get("/usuarios/id/{user_id}", response_model=UsuarioPublic)
-def buscar_usuario_por_id(user_id: int):
-    if user_id not in usuarios_db:
+def buscar_usuario_por_id(user_id: int, session: Session =  Depends(get_session)):
+
+    db_user = session.scalar(select(User).where(User.id == user_id))
+
+    if not db_user:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail="Usuário não encontrado."
         )
-    return usuarios_db[user_id]
+    return db_user
 
 @app.get("/usuarios/nome/{username}", response_model=UsuarioPublic)
-def buscar_usuario_por_nome(username: str):
-    for user in usuarios_db.values():
-        if user.username.lower() == username.lower():
-            return user
-    raise HTTPException(
-        status_code=HTTPStatus.NOT_FOUND,
-        detail="Usuário não encontrado."
+def buscar_usuario_por_nome(username: str, session: Session = Depends(get_session)):
+
+    db_user +session.scalar(select(User).where(User.username == username))
+   
+    if not db_user:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Usuário não encontrado."
     )
 
+    return db_user
+
 @app.put("/usuarios/{user_id}", response_model=UsuarioPublic)
-def editar_usuario(user_id: int, usuario_data: UsuarioUpdate):
-    if user_id not in usuarios_db:
+def editar_usuario(user_id: int, usuario_data: UsuarioUpdate, session: Session = Depends(get_session)):
+    
+    if not db_user:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail="Usuário não encontrado."
@@ -148,26 +173,47 @@ def editar_usuario(user_id: int, usuario_data: UsuarioUpdate):
     update_data = usuario_data.model_dump(exclude_unset=True)
 
     if 'email' in update_data and update_data['email'] != usuario_existente.email:
-        for user in usuarios_db.values():
-            if user.email == update_data['email'] and user.id != user_id:
-                raise HTTPException(
-                    status_code=HTTPStatus.BAD_REQUEST,
-                    detail="Já existe outro usuário com este email."
-                )
+        user_by_email = session.scalar(
+            select(User).where(User.email == update_data["email"])
+        )
 
+    if user_by_email:
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT,
+            detail="Email já existe para outro usuário.",
+        )
+
+    if "username" in update_data and update_data["username"] != db_user.username:
+        user_by_username = session.scalar(
+            select(User).where(User.username == update_data["username"])
+        )
+        if user_by_username:
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail="Nome de usuário já existe para outro usuário.",
+            )
+        
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
     updated_user = usuario_existente.model_copy(update=update_data)
     
-    usuarios_db[user_id] = updated_user
-    
-    return updated_user
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+
+    return db_user
 
 @app.delete("/usuarios/{user_id}", status_code=HTTPStatus.NO_CONTENT)
-def deletar_usuario(user_id: int):
-    if user_id not in usuarios_db:
+def deletar_usuario(user_id: int, session: Sessions = Depends(get_session)):
+    db_user = session.scalar(select(User).where(User.id == user_id))
+
+    if not db_user:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail="Usuário não encontrado."
         )
     
-    del usuarios_db[user_id]
-    return
+    session.delete(db_user)
+    session.commit()
+    
+    return None
