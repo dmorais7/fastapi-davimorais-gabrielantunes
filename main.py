@@ -128,12 +128,15 @@ def criar_usuario(
 
 
 @app.get("/usuarios", response_model=List[UsuarioPublic])
-   
 def listar_usuarios (Session: Session: Depends(get_session, skip: int = 0, limit: int = 100)):
 
-usuarios = Session.scalars(select(User).offset(skip).limit(limit)).all()
+usuarios = Session.scalars(
+    select(User)
+    .offset(skip)
+    .limit(limit)
+).all()
 
-    return usuarios
+return listar_usuarios
 
 @app.get("/usuarios/id/{user_id}", response_model=UsuarioPublic)
 def buscar_usuario_por_id(user_id: int, session: Session =  Depends(get_session)):
@@ -217,4 +220,4 @@ def deletar_usuario(user_id: int, session: Sessions = Depends(get_session)):
     session.delete(db_user)
     session.commit()
     
-    return None:
+    return None
