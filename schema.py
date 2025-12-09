@@ -13,6 +13,9 @@ class receita(BaseModel):
     modo_de_preparo: str
     user_id: int
 
+    class Config:
+        from_attributes = True
+
 class BaseUsuario(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
@@ -26,12 +29,6 @@ class UsuarioUpdate(BaseModel):
     password: Optional[str] = Field(None, min_length=6)
 
 class UsuarioPublic(BaseUsuario):
-    id: int
-    
-    class Config:
-        from_attributes = True
-
-class Usuario(UsuarioPublic):
     id: int
     
     class Config:

@@ -10,7 +10,7 @@ engine = create_engine(settings.DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoFlush=False, bind=engine)
 
 def get_session() ->Generator[Session, None ,None]:
-    session: session = SessionLocal()
+    session: Session = SessionLocal()
     try:
         yield session
     finally:

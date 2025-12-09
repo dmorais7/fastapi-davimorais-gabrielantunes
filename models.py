@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Annotated, List
 from sqlalchemy import func, ForeignKey, String
-from sqlalchemy.orm import Mapped,mapped_column,registry,relationship
+from sqlalchemy.orm import Mapped,mapped_column ,registry, relationship
 
 table_registry = registry()
+Base = table_registry.generate_base()
 
 class user(table_registry.Base):
     __tablename__ = 'users'
