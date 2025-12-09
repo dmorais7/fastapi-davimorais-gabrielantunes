@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 
 class Creatreceita(BaseModel):
@@ -11,6 +11,7 @@ class receita(BaseModel):
     nome: str
     ingredientes: List[str]
     modo_de_preparo: str
+    user_id: int
 
 class BaseUsuario(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
@@ -31,7 +32,7 @@ class UsuarioPublic(BaseUsuario):
         from_attributes = True
 
 class Usuario(UsuarioPublic):
-    password: str
+    id: int
     
     class Config:
         from_attributes = True
